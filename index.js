@@ -1,4 +1,4 @@
-const { InMemoryMatchStorage } = require('./matchStorage');
+const { FileMatchStorage } = require('./matchStorage');
 const { OpenDotaService } = require('./openDotaService');
 const { MatchTracker } = require('./matchTracker');
 const { MatchPoller } = require('./matchPoller');
@@ -7,7 +7,7 @@ const { MatchPoller } = require('./matchPoller');
 const accountId = '270293472'; // Replace with actual account ID
 
 // Initialize services
-const storage = new InMemoryMatchStorage();
+const storage = new FileMatchStorage();
 const apiService = new OpenDotaService();
 const matchTracker = new MatchTracker(storage, apiService);
 const poller = new MatchPoller(matchTracker, accountId, 30000);

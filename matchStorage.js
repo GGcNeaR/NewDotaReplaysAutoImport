@@ -37,4 +37,54 @@ class InMemoryMatchStorage extends MatchStorage {
   }
 }
 
-module.exports = { MatchStorage, InMemoryMatchStorage };
+/**
+ * File-based implementation
+ */
+class FileMatchStorage extends MatchStorage {
+  constructor(filePath = './saved_matches.txt') {
+    super();
+    this.filePath = filePath;
+    this.matches = new Set();
+    this.initialized = false;
+  }
+
+  async _init() {
+    if (this.initialized) return;
+
+    const fs = require('fs').promises;
+    try {
+      const content = await fs.readFile(this.filePath, 'utf-8');
+      const matchIds = content.split('\n').filter(line => line.trim());
+      matchIds.forEach(id => this.matches.add(id));
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+      // File doesn't exist yet, will be created on first write
+    }
+    this.initialized = true;
+  }
+
+  async hasMatch(matchId) {
+    await this._init();
+    return this.matches.has(String(matchId));
+  }
+
+  async addMatch(matchId) {
+    await this._init();
+    const matchIdStr = String(matchId);
+
+    if (!this.matches.has(matchIdStr)) {
+      this.matches.add(matchIdStr);
+      const fs = require('fs').promises;
+      await fs.appendFile(this.filePath, matchIdStr + '\n', 'utf-8');
+    }
+  }
+
+  async getAll() {
+    await this._init();
+    return Array.from(this.matches);
+  }
+}
+
+module.exports = { MatchStorage, InMemoryMatchStorage, FileMatchStorage };
